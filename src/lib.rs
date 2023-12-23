@@ -27,9 +27,10 @@ fn host_log(record: &PyAny, rust_target: &str) -> PyResult<()> {
     let full_target: Option<String> = if logger_name.trim().is_empty() || logger_name == "root" {
         None
     } else {
-        Some(format!(
-            "{rust_target}:{logger_name}",
-        ))
+        // Libraries (ex: tracing_subscriber::filter::Directive) expect rust-style targets like foo::bar,
+        // and may not deal well with "." as a module separator:
+        let logger_name = logger_name.replace(".", "::");
+        Some(format!("{rust_target}::{logger_name}"))
     };
     let target = full_target.as_ref().map(|x| x.as_str()).unwrap_or(rust_target);
 
